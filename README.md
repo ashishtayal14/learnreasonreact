@@ -1,9 +1,11 @@
 # learnreasonreact
 
-1. The component template is created through ReasonReact.statelessComponent("TheComponentName"). The string being passed is for debugging purposes (the equivalent of ReactJS' displayName).
+1. 
+The component template is created through ReasonReact.statelessComponent("TheComponentName"). The string being passed is for debugging purposes (the equivalent of ReactJS' displayName).
 	let component = ReasonReact.statelessComponent("Greeting");
 
-2. In reason react instead of creating a component class you create a component as below :
+2. 
+In reason react instead of creating a component class you create a component as below :
 ```javascript
 	/* still in Greeting.re */
 let component = ReasonReact.statelessComponent("Greeting");
@@ -14,13 +16,15 @@ let make = (~name, _children) => {
 ```
 Here you pass name as a labeled prop. You pass _children as the last argument of the make function. The last prop must be children. If you don't use it, simply ignore it by naming it _ or _children. Names starting with underscore don't trigger compiler warnings if they're unused. 
 
-3. The make function is what's called by ReasonReact's JSX.
+3. 
+The make function is what's called by ReasonReact's JSX.
 ```javascript
 ReasonReact.element(Greeting.make(~name="John", [||])) /* the `make` function in the module `Greeting` */
 /* equivalent to <Greeting name="John" /> */
 ```
 
-4. Note: do not inline let component into the make function body like the following!
+4. 
+Note: do not inline let component into the make function body like the following!
 ```javascript
 let make = _children => {
   ...(ReasonReact.statelessComponent("Greeting")),
@@ -29,11 +33,13 @@ let make = _children => {
 ```
 Since make is called at every JSX invocation, you'd be accidentally creating a fresh new component every time.
 
-5. The prop name cannot be ref nor key. Those are reserved, just like in ReactJS.
+5. 
+The prop name cannot be ref nor key. Those are reserved, just like in ReactJS.
 
-6. ```javascript
-    <Foo name="Reason" age={this.props.age} />
-    ```
+6. 
+```javascript
+<Foo name="Reason" age={this.props.age} />
+```
 This is a source of bugs, because this.props.age might be accidentally changed to a nullable number while Foo doesn't expect it to be so, or vice-versa; it might be nullable before, and now it's not and Foo is left with a useless null check somewhere in the render.
 ```javascript
 Instead use optionals 
@@ -45,11 +51,16 @@ Or
 <Foo name="Reason" age=?ageFromProps />
 ```
 
-7. You might have seen the render: (self) => ... part in make. The concept of JavaScript this doesn't exist in ReasonReact (but can exist in Reason, since it has an optional object system); the this equivalent is called self. It's a record that contains state, handle and send, which we pass around to the lifecycle events, render and a few others, when they need the bag of information. These concepts will be explained later on.
+7. 
+You might have seen the render: (self) => ... part in make. The concept of JavaScript this doesn't exist in ReasonReact (but can exist in Reason, since it has an optional object system); the this equivalent is called self. It's a record that contains state, handle and send, which we pass around to the lifecycle events, render and a few others, when they need the bag of information. These concepts will be explained later on.
 
-8. Reason comes with the JSX syntax! ReasonReact transforms it from an agnostic function call into a ReasonReact-specific call through a macro. To take advantage of ReasonReact JSX, put {"reason": {"react-jsx": 2} in your bsconfig.json (schema here).
+8. 
+Reason comes with the JSX syntax! ReasonReact transforms it from an agnostic function call into a ReasonReact-specific call through a macro. To take advantage of ReasonReact JSX, put {"reason": {"react-jsx": 2} in your bsconfig.json (schema here).
 
-9. <div foo={bar}> {child1} {child2} </div>
+9. 
+```javascript 
+<div foo={bar}> {child1} {child2} </div>
+```
 Transforms into
 ReactDOMRe.createElement("div", ~props=ReactDOMRe.props(~foo=bar, ()), [|child1, child2|]);
 which compiles to the JS code:
@@ -86,13 +97,15 @@ ReasonReact.element(
 );
 ```
 
-12. In ReactJS, you can easily do: <div> hello </div>, <div> {1} </div>, <div> {null} </div>, etc. In Reason, the type system restricts you from passing arbitrary data like so; you can only return ReasonReact.reactElement from render.
+12. 
+In ReactJS, you can easily do: <div> hello </div>, <div> {1} </div>, <div> {null} </div>, etc. In Reason, the type system restricts you from passing arbitrary data like so; you can only return ReasonReact.reactElement from render.
 Fortunately, we special-case a few special elements of the type ReasonReact.reactElement:
 	•	ReasonReact.null: This is your null equivalent for render's return value. Akin to return null in ReactJS render.
 	•	ReasonReact.string: Takes a string and converts it to a reactElement. You'd use <div> {ReasonReact.string(string_of_int(10))} </div> to display an int.
 	•	ReasonReact.array: Takes an array and converts it to a reactElement.
 
-13. If you're just forwarding a callback prop onto your child, you'd do exactly the same thing you'd have done in ReactJS:
+13. 
+If you're just forwarding a callback prop onto your child, you'd do exactly the same thing you'd have done in ReactJS:
 ```javascript
 let component = ...;
 
@@ -113,7 +126,8 @@ let make = (~name, ~onClick, _children) => {
 };
 ```
 
-14. To access state, send and the other items in self from a callback, you need to wrap the callback in an extra layer called self.handle:
+14. 
+To access state, send and the other items in self from a callback, you need to wrap the callback in an extra layer called self.handle:
 ```javascript
 let component = ...;
 let make = (~name, ~onClick, _children) => {
@@ -136,7 +150,9 @@ Note 2: sometimes you might be forwarding handle to some helper functions. Pas
 In reality, self.handle is just a regular function accepting two arguments, the first being the callback in question, and the second one being the payload that's intended to be passed to the callback.
 Get it? Through Reason's natural language-level currying, we usually only ask you to pass the first argument. This returns a new function that takes in the second argument and executes the function body. The second argument being passed by the caller, aka the component you're rendering!
 self.handle(click) return a function => onClick calls this function and passes “event” as the payload => this function internally calls the click function and passes this payload along with “self”
-15. Sometimes, the component you're calling is from JavaScript (using the ReasonReact<->ReactJS interop), and its callback prop asks you to pass a callback that receives more than one argument. In ReactJS, it'd look like:
+
+15. 
+Sometimes, the component you're calling is from JavaScript (using the ReasonReact<->ReactJS interop), and its callback prop asks you to pass a callback that receives more than one argument. In ReactJS, it'd look like:
 ```javascript
 handleSubmit: function(username, password, event) {
   this.setState(...)
@@ -160,7 +176,8 @@ Basically, you write a normal callback that:
 	•	pass to handle the usual function that expects a single argument,
 	•	finish calling self.handle by passing the tuple directly yourself.
 
-16. You can't update state in self.handle; you need to use self.send instead. See the next section.
+16. 
+You can't update state in self.handle; you need to use self.send instead. See the next section.
 To declare a stateful ReasonReact component, instead of ReasonReact.statelessComponent("MyComponentName"), use ReasonReact.reducerComponent("MyComponentName").
 
 ```javascript
@@ -213,7 +230,8 @@ let make = (~greeting, _children) => {
 };
 ```
 
-17. ReactJS' getInitialState is called initialState in ReasonReact. It takes unit and returns the state type. The state type could be anything! An int, a string, a ref or the common record type, which you should declare right before the reducerComponent call:
+17. 
+ReactJS' getInitialState is called initialState in ReasonReact. It takes unit and returns the state type. The state type could be anything! An int, a string, a ref or the common record type, which you should declare right before the reducerComponent call:
 type state = {count: int, show: bool};
 ```javascript
 let component = ReasonReact.reducerComponent("Example");
@@ -227,20 +245,23 @@ let make = (~onClick, _children) => {
 Since the props are just the arguments on make, feel free to read into them to initialize your state based on them.
 
 
-18. In ReasonReact, you'd gather all these state-setting handlers into a single place, the component's reducer! Please refer to the first snippet of code on this page.
+18. 
+In ReasonReact, you'd gather all these state-setting handlers into a single place, the component's reducer! Please refer to the first snippet of code on this page.
 Note: if you ever see mentions of self.reduce, this is the old API. The new API is called self.send. The old API's docs are here.
 A few things:
 	•	There's a user-defined type called action, named so by convention. It's a variant of all the possible state transitions in your component. In state machine terminology, this'd be a "token".
 	•	A "reducer"! This pattern-matches on the possible actions and specify what state update each action corresponds to. In state machine terminology, this'd be a "state transition".
 	•	In render, instead of self.handle (which doesn't allow state updates), you'd use self.send. send takes an action.
 
-19. Notice the return value of reducer? The ReasonReact.Update part. Instead of returning a bare new state, we ask you to return the state wrapped in this "update" variant. Here are its possible values:
+19. 
+Notice the return value of reducer? The ReasonReact.Update part. Instead of returning a bare new state, we ask you to return the state wrapped in this "update" variant. Here are its possible values:
 	•	ReasonReact.NoUpdate: don't do a state update.
 	•	ReasonReact.Update state: update the state.
 	•	ReasonReact.SideEffects(self => unit): no state update, but trigger a side-effect, e.g. ReasonReact.SideEffects(_self => Js.log("hello!")).
 	•	ReasonReact.UpdateWithSideEffects(state, self => unit): update the state, then trigger a side-effect.
 
-20. Please read through all these points, if you want to fully take advantage of reducer and avoid future ReactJS Fiber race condition problems.
+20. 
+Please read through all these points, if you want to fully take advantage of reducer and avoid future ReactJS Fiber race condition problems.
 	•	The action type's variants can carry a payload: onClick={data => self.send(Click(data.foo))}.
 	•	Don't pass the whole event into the action variant's payload. ReactJS events are pooled; by the time you intercept the action in the reducer, the event's already recycled.
 	•	reducer must be pure! Aka don't do side-effects in them directly. You'll thank us when we enable the upcoming concurrent React (Fiber). Use SideEffects or UpdateWithSideEffects to enqueue a side-effect. The side-effect (the callback) will be executed after the state setting, but before the next render.
@@ -249,7 +270,8 @@ A few things:
 	•	If your state only holds instance variables, it also means (by the convention in the instance variables section) that your component only contains self.handle, no self.send. You still needs to specify a reducer like so: reducer: ((), _state) => ReasonReact.NoUpdate. Otherwise you'll get a variable cannot be generalized type error.
 Cram as much as possible into reducer. Keep your actual callback handlers (the self.send(Foo) part) dumb and small. This makes all your state updates & side-effects (which itself should mostly only be inside ReasonReact.SideEffects and ReasonReact.UpdateWithSideEffects) much easier to scan through. Also more ReactJS fiber async-mode resilient.
 
-21. ReasonReact supports the familiar ReactJS lifecycle events.
+21. 
+ReasonReact supports the familiar ReactJS lifecycle events.
 didMount: self => unit
 
 willReceiveProps: self => state
@@ -270,7 +292,8 @@ Note:
 	•	didUpdate, willUpdate and shouldUpdate take in a oldAndNewSelf record, of type {oldSelf: self, newSelf: self}. These two fields are the equivalent of ReactJS' componentDidUpdate's prevProps/prevState/ in conjunction with props/state. Likewise for willUpdate and shouldUpdate.
 If you need to update state in a lifecycle event, simply send an action to reducer and handle it correspondingly: self.send(DidMountUpdate).
 
-22. One pattern that's sometimes used in ReactJS is accessing a lifecyle event's prevProps(componentDidUpdate), nextProps (componentWillUpdate), and so on. ReasonReact doesn't automatically keep copies of previous props for you. We provide the retainedProps API for this purpose:
+22. 
+One pattern that's sometimes used in ReactJS is accessing a lifecyle event's prevProps(componentDidUpdate), nextProps (componentWillUpdate), and so on. ReasonReact doesn't automatically keep copies of previous props for you. We provide the retainedProps API for this purpose:
 type retainedProps = {message: string};
 ```javascript
 let component = ReasonReact.statelessComponentWithRetainedProps("RetainedPropsExample");
@@ -288,7 +311,8 @@ let make = (~message, _children) => {
 ```
 We expose ReasonReact.statelessComponentWithRetainedProps and ReasonReact.reducerComponentWithRetainedProps. Both work like their ordinary non-retained-props counterpart, and require you to specify a new field, retainedProps (of whatever type you'd like) in your component's spec in make.
 
-23. Traditional ReactJS componentWillReceiveProps takes in a nextProps. We don't have nextProps, since those are simply the labeled arguments in make, available to you in the scope. To access the current props, however, you'd use the above retainedProps API:
+23. 
+Traditional ReactJS componentWillReceiveProps takes in a nextProps. We don't have nextProps, since those are simply the labeled arguments in make, available to you in the scope. To access the current props, however, you'd use the above retainedProps API:
 ```javascript
 type state = {someToggle: bool};
 
@@ -309,7 +333,8 @@ let make = (~name, _children) => {
 };
 ```
 
-24. A common pattern in ReactJS is to attach extra variables onto a component's spec:
+24. 
+A common pattern in ReactJS is to attach extra variables onto a component's spec:
 ```javascript
 const Greeting = React.createClass({
   intervalId: null,
@@ -340,7 +365,8 @@ let make = (_children) => {
 ```
 All your instance variables (subscriptions, refs, etc.) must be in state fields marked as a ref. Don't directly use a mutable field on the state record, use an immutable field pointing to a Reason ref. Why such constraint? To prepare for concurrent React which needs to manage side-effects & mutations more formally. More details here if you're ever interested.
 
-25. A ReasonReact ref would be just another instance variable. You'd type it as ReasonReact.reactRef if it's attached to a custom component, and Dom.element if it's attached to a React DOM element.
+25. 
+A ReasonReact ref would be just another instance variable. You'd type it as ReasonReact.reactRef if it's attached to a custom component, and Dom.element if it's attached to a React DOM element.
 ```javascript
 type state = {
   isOpen: bool,
@@ -374,7 +400,8 @@ let handleClick = (event, self) =>
   };
 ```
 
-26. You can reuse the same bsb setup (that you might have seen here)! Aka, put a bsconfig.json at the root of your ReactJS project:
+26. 
+You can reuse the same bsb setup (that you might have seen here)! Aka, put a bsconfig.json at the root of your ReactJS project:
 ```javascript
 {
   "name": "my-project-name",
@@ -434,7 +461,8 @@ ReasonReact.wrapJsForReason is the helper we expose for this purpose. It takes 
 props is mandatory. If you don't have any to pass, pass ~props=Js.Obj.empty() instead.
 Note: if your app successfully compiles, and you see the error "element type is invalid..." in your console, you might be hitting this mistake.
 
-28. We expose a helper for the other direction, ReasonReact.wrapReasonForJs:
+28. 
+We expose a helper for the other direction, ReasonReact.wrapReasonForJs:
 ```javascript
 let component = ...;
 let make ...;
@@ -467,11 +495,13 @@ and then import it on the JS side with:
 import MyReasonComponent from './myReasonComponent.bs';
 BuckleScript default exports only works when the JS side uses ES6 import/exports. More info here.
 
-29. ReasonReact events map cleanly to ReactJS synthetic events. More info in the inline docs.
+29. 
+ReasonReact events map cleanly to ReactJS synthetic events. More info in the inline docs.
 If you're accessing fields on your event object, like event.target.value, you'd use a combination of a ReactDOMRe helper and BuckleScript's ## object access FFI:
 ReactDOMRe.domElementToObj(ReactEventRe.Form.target(event))##value;
 
-30. Since CSS-in-JS is all the rage right now, we'll recommend our official pick soon. In the meantime, for inline styles, there's the ReactDOMRe.Style.make API:
+30. 
+Since CSS-in-JS is all the rage right now, we'll recommend our official pick soon. In the meantime, for inline styles, there's the ReactDOMRe.Style.make API:
 ```javascript
 <div style=(
   ReactDOMRe.Style.make(~color="#444444", ~fontSize="68px", ())
