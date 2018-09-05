@@ -114,10 +114,11 @@ let make = (~name, ~onClick, _children) => {
   ...component,
   render: (self) => <button onClick=onClick />
 };
-No surprise here. Since Reason's JSX has punning syntax, that button will format into <button onClick />.
+```
+No surprise here. Since Reason's JSX has punning syntax, that button will format into `<button onClick />`.
 Similarly, to pre-process a value before sending it back to the component's owner:
 let component = ...;
-
+```javascript
 let make = (~name, ~onClick, _children) => {
   let click = (event) => onClick(name); /* pass the name string up to the owner */
   {
@@ -233,8 +234,9 @@ let make = (~greeting, _children) => {
 
 17. 
 ReactJS' getInitialState is called initialState in ReasonReact. It takes unit and returns the state type. The state type could be anything! An int, a string, a ref or the common record type, which you should declare right before the reducerComponent call:
-type state = {count: int, show: bool};
 ```javascript
+type state = {count: int, show: bool};
+
 let component = ReasonReact.reducerComponent("Example");
 
 let make = (~onClick, _children) => {
@@ -258,7 +260,8 @@ A few things:
 Notice the return value of reducer? The ReasonReact.Update part. Instead of returning a bare new state, we ask you to return the state wrapped in this "update" variant. Here are its possible values:
 	•	ReasonReact.NoUpdate: don't do a state update.
 	•	ReasonReact.Update state: update the state.
-	•	ReasonReact.SideEffects(self => unit): no state update, but trigger a side-effect, e.g. ReasonReact.SideEffects(_self => Js.log("hello!")).
+	•	ReasonReact.SideEffects(self => unit): no state update, but trigger a side-effect, e.g. 
+  `ReasonReact.SideEffects(_self => Js.log("hello!"))`.
 	•	ReasonReact.UpdateWithSideEffects(state, self => unit): update the state, then trigger a side-effect.
 
 20. 
@@ -273,6 +276,7 @@ Cram as much as possible into reducer. Keep your actual callback handlers (the�
 
 21. 
 ReasonReact supports the familiar ReactJS lifecycle events.
+```javascript
 didMount: self => unit
 
 willReceiveProps: self => state
@@ -284,7 +288,7 @@ willUpdate: oldAndNewSelf => unit
 didUpdate: oldAndNewSelf => unit
 
 willUnmount: self => unit
-
+```
 Note:
 	•	We've dropped the component prefix from all these.
 	•	willReceiveProps asks, for the return type, to be state, not update state (i.e. not NoUpdate/Update/SideEffects/UpdateWithSideEffects). We presume you'd always want to update the state in this lifecycle. If not, simply return the previous state exposed in the lifecycle argument.
@@ -294,9 +298,11 @@ Note:
 If you need to update state in a lifecycle event, simply send an action to reducer and handle it correspondingly: self.send(DidMountUpdate).
 
 22. 
-One pattern that's sometimes used in ReactJS is accessing a lifecyle event's prevProps(componentDidUpdate), nextProps (componentWillUpdate), and so on. ReasonReact doesn't automatically keep copies of previous props for you. We provide the retainedProps API for this purpose:
-type retainedProps = {message: string};
+One pattern that's sometimes used in ReactJS is accessing a lifecyle event's `prevProps(componentDidUpdate)`, 
+`nextProps (componentWillUpdate)`, and so on. ReasonReact doesn't automatically keep copies of previous props for you. We provide the retainedProps API for this purpose:
 ```javascript
+type retainedProps = {message: string};
+
 let component = ReasonReact.statelessComponentWithRetainedProps("RetainedPropsExample");
 
 let make = (~message, _children) => {
@@ -310,7 +316,7 @@ let make = (~message, _children) => {
   render: (_self) => ...
 };
 ```
-We expose ReasonReact.statelessComponentWithRetainedProps and ReasonReact.reducerComponentWithRetainedProps. Both work like their ordinary non-retained-props counterpart, and require you to specify a new field, retainedProps (of whatever type you'd like) in your component's spec in make.
+We expose `ReasonReact.statelessComponentWithRetainedProps` and `ReasonReact.reducerComponentWithRetainedProps`. Both work like their ordinary non-retained-props counterpart, and require you to specify a new field, retainedProps (of whatever type you'd like) in your component's spec in make.
 
 23. 
 Traditional ReactJS componentWillReceiveProps takes in a nextProps. We don't have nextProps, since those are simply the labeled arguments in make, available to you in the scope. To access the current props, however, you'd use the above retainedProps API:
@@ -423,7 +429,7 @@ You can reuse the same bsb setup (that you might have seen here)! Aka, put a�
 }
 ```
 This will build Reason files in my_source_folder (e.g. reasonComponent.re) and output the JS files (e.g. reasonComponent.bs.js) alongside them.
-Then add bs-platform to your package.json (npm install --save-dev bs-platform or yarn add --dev bs-platform):
+Then add bs-platform to your package.json `(npm install --save-dev bs-platform or yarn add --dev bs-platform)`:
 ```javascript
 "scripts": {
   "start": "bsb -make-world -w"
@@ -442,8 +448,8 @@ Running npm start (or alias it to your favorite command) starts the bsb buil
 
 27. 
 Easy! Since other Reason components only need you to expose a make function, fake one up:
-[@bs.module] external myJSReactClass: ReasonReact.reactClass = "./myJSReactClass";
 ```javascript
+[@bs.module] external myJSReactClass: ReasonReact.reactClass = "./myJSReactClass";
 let make = (~className, ~type_, ~value=?, children) =>
   ReasonReact.wrapJsForReason(
     ~reactClass=myJSReactClass,
@@ -487,13 +493,13 @@ The function takes in:
 	•	The labeled reason component you've created
 	•	A function that, given the JS props, asks you to call make while passing in the correctly converted parameters (bs.deriving abstract above generates a field accessor for every record field you've declared).
 You'd assign the whole thing to the name jsComponent. The JS side can then import it:
-var MyReasonComponent = require('./myReasonComponent.bs').jsComponent;
+`var MyReasonComponent = require('./myReasonComponent.bs').jsComponent;`
 // make sure you're passing the correct data types!
-<MyReasonComponent name="John" />
+`<MyReasonComponent name="John" />`
 Note: if you'd rather use a default import on the JS side, you can export such default from BuckleScript/ReasonReact:
-let default = ReasonReact.wrapReasonForJs(...)
+`let default = ReasonReact.wrapReasonForJs(...)`
 and then import it on the JS side with:
-import MyReasonComponent from './myReasonComponent.bs';
+`import MyReasonComponent from './myReasonComponent.bs';`
 BuckleScript default exports only works when the JS side uses ES6 import/exports. More info here.
 
 29. 
@@ -504,8 +510,6 @@ ReactDOMRe.domElementToObj(ReactEventRe.Form.target(event))##value;
 30. 
 Since CSS-in-JS is all the rage right now, we'll recommend our official pick soon. In the meantime, for inline styles, there's the ReactDOMRe.Style.make API:
 ```javascript
-<div style=(
-  ReactDOMRe.Style.make(~color="#444444", ~fontSize="68px", ())
-)/>
+<div style=(ReactDOMRe.Style.make(~color="#444444", ~fontSize="68px", ()))/>
 ```
 It's a labeled (typed!) function call that maps to the familiar style object {color: '#444444', fontSize: '68px'}. Note that make returns an opaque ReactDOMRe.style type that you can't read into. We also expose a ReactDOMRe.Style.combine that takes in two styles and combine them.
