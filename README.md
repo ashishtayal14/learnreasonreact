@@ -152,6 +152,7 @@ Note how your click callback now takes the extra argument self. Formally, s
 - accepts the single payload you'd normally directly pass to e.g. handleClick,
 - plus the argument self,
 - returns "nothing" (aka, (), aka, unit).
+
 Note 2: sometimes you might be forwarding handle to some helper functions. Pass the whole self instead and annotate it. This avoids a complex self record type behavior. See Record Field send/handle Not Found.
 In reality, self.handle is just a regular function accepting two arguments, the first being the callback in question, and the second one being the payload that's intended to be passed to the callback.
 Get it? Through Reason's natural language-level currying, we usually only ask you to pass the first argument. This returns a new function that takes in the second argument and executes the function body. The second argument being passed by the caller, aka the component you're rendering!
@@ -256,26 +257,26 @@ Since the props are just the arguments on make, feel free to read into them to 
 In ReasonReact, you'd gather all these state-setting handlers into a single place, the component's reducer! Please refer to the first snippet of code on this page.
 Note: if you ever see mentions of self.reduce, this is the old API. The new API is called self.send. The old API's docs are here.
 A few things:
-	•	There's a user-defined type called action, named so by convention. It's a variant of all the possible state transitions in your component. In state machine terminology, this'd be a "token".
-	•	A "reducer"! This pattern-matches on the possible actions and specify what state update each action corresponds to. In state machine terminology, this'd be a "state transition".
-	•	In render, instead of self.handle (which doesn't allow state updates), you'd use self.send. send takes an action.
+- There's a user-defined type called action, named so by convention. It's a variant of all the possible state transitions in your component. In state machine terminology, this'd be a "token".
+- A "reducer"! This pattern-matches on the possible actions and specify what state update each action corresponds to. In state machine terminology, this'd be a "state transition".
+- In render, instead of self.handle (which doesn't allow state updates), you'd use self.send. send takes an action.
 
 19. 
 Notice the return value of reducer? The ReasonReact.Update part. Instead of returning a bare new state, we ask you to return the state wrapped in this "update" variant. Here are its possible values:
-	•	ReasonReact.NoUpdate: don't do a state update.
-	•	ReasonReact.Update state: update the state.
-	•	ReasonReact.SideEffects(self => unit): no state update, but trigger a side-effect, e.g. 
+- ReasonReact.NoUpdate: don't do a state update.
+- ReasonReact.Update state: update the state.
+- ReasonReact.SideEffects(self => unit): no state update, but trigger a side-effect, e.g. 
   `ReasonReact.SideEffects(_self => Js.log("hello!"))`.
-	•	ReasonReact.UpdateWithSideEffects(state, self => unit): update the state, then trigger a side-effect.
+- ReasonReact.UpdateWithSideEffects(state, self => unit): update the state, then trigger a side-effect.
 
 20. 
 Please read through all these points, if you want to fully take advantage of reducer and avoid future ReactJS Fiber race condition problems.
-	•	The action type's variants can carry a payload: onClick={data => self.send(Click(data.foo))}.
-	•	Don't pass the whole event into the action variant's payload. ReactJS events are pooled; by the time you intercept the action in the reducer, the event's already recycled.
-	•	reducer must be pure! Aka don't do side-effects in them directly. You'll thank us when we enable the upcoming concurrent React (Fiber). Use SideEffects or UpdateWithSideEffects to enqueue a side-effect. The side-effect (the callback) will be executed after the state setting, but before the next render.
-	•	If you need to do e.g. ReactEventRe.BlablaEvent.preventDefault(event), do it in self.send, before returning the action type. Again, reducer must be pure.
-	•	Feel free to trigger another action in SideEffects and UpdateWithSideEffects, e.g. UpdateWithSideEffects(newState, (self) => self.send(Click)).
-	•	If your state only holds instance variables, it also means (by the convention in the instance variables section) that your component only contains self.handle, no self.send. You still needs to specify a reducer like so: reducer: ((), _state) => ReasonReact.NoUpdate. Otherwise you'll get a variable cannot be generalized type error.
+- The action type's variants can carry a payload: onClick={data => self.send(Click(data.foo))}.
+- Don't pass the whole event into the action variant's payload. ReactJS events are pooled; by the time you intercept the action in the reducer, the event's already recycled.
+- reducer must be pure! Aka don't do side-effects in them directly. You'll thank us when we enable the upcoming concurrent React (Fiber). Use SideEffects or UpdateWithSideEffects to enqueue a side-effect. The side-effect (the callback) will be executed after the state setting, but before the next render.
+- If you need to do e.g. ReactEventRe.BlablaEvent.preventDefault(event), do it in self.send, before returning the action type. Again, reducer must be pure.
+- Feel free to trigger another action in SideEffects and UpdateWithSideEffects, e.g. UpdateWithSideEffects(newState, (self) => self.send(Click)).
+- If your state only holds instance variables, it also means (by the convention in the instance variables section) that your component only contains self.handle, no self.send. You still needs to specify a reducer like so: reducer: ((), _state) => ReasonReact.NoUpdate. Otherwise you'll get a variable cannot be generalized type error.
 Cram as much as possible into reducer. Keep your actual callback handlers (the self.send(Foo) part) dumb and small. This makes all your state updates & side-effects (which itself should mostly only be inside ReasonReact.SideEffects and ReasonReact.UpdateWithSideEffects) much easier to scan through. Also more ReactJS fiber async-mode resilient.
 
 21. 
@@ -294,11 +295,11 @@ didUpdate: oldAndNewSelf => unit
 willUnmount: self => unit
 ```
 Note:
-	•	We've dropped the component prefix from all these.
-	•	willReceiveProps asks, for the return type, to be state, not update state (i.e. not NoUpdate/Update/SideEffects/UpdateWithSideEffects). We presume you'd always want to update the state in this lifecycle. If not, simply return the previous state exposed in the lifecycle argument.
-	•	didUpdate, willUnmount and willUpdate don't allow you to return a new state to be updated, to prevent infinite loops.
-	•	willMount is unsupported. Use didMount instead.
-	•	didUpdate, willUpdate and shouldUpdate take in a oldAndNewSelf record, of type {oldSelf: self, newSelf: self}. These two fields are the equivalent of ReactJS' componentDidUpdate's prevProps/prevState/ in conjunction with props/state. Likewise for willUpdate and shouldUpdate.
+- We've dropped the component prefix from all these.
+- willReceiveProps asks, for the return type, to be state, not update state (i.e. not NoUpdate/Update/SideEffects/UpdateWithSideEffects). We presume you'd always want to update the state in this lifecycle. If not, simply return the previous state exposed in the lifecycle argument.
+- didUpdate, willUnmount and willUpdate don't allow you to return a new state to be updated, to prevent infinite loops.
+- willMount is unsupported. Use didMount instead.
+- didUpdate, willUpdate and shouldUpdate take in a oldAndNewSelf record, of type {oldSelf: self, newSelf: self}. These two fields are the equivalent of ReactJS' componentDidUpdate's prevProps/prevState/ in conjunction with props/state. Likewise for willUpdate and shouldUpdate.
 If you need to update state in a lifecycle event, simply send an action to reducer and handle it correspondingly: self.send(DidMountUpdate).
 
 22. 
@@ -466,9 +467,9 @@ let make = (~className, ~type_, ~value=?, children) =>
   );
 ```
 ReasonReact.wrapJsForReason is the helper we expose for this purpose. It takes in:
-	•	The reactClass you want to wrap
-	•	The props js object you'd create through the generated jsProps function from the jsPropstype you've declared above (with values properly converted from Reason data structures to JS)
-	•	The mandatory children you'd forward to the JS side.
+- The reactClass you want to wrap
+- The props js object you'd create through the generated jsProps function from the jsPropstype you've declared above (with values properly converted from Reason data structures to JS)
+- The mandatory children you'd forward to the JS side.
 props is mandatory. If you don't have any to pass, pass ~props=Js.Obj.empty() instead.
 Note: if your app successfully compiles, and you see the error "element type is invalid..." in your console, you might be hitting this mistake.
 
@@ -494,8 +495,8 @@ let jsComponent =
   );
 ```
 The function takes in:
-	•	The labeled reason component you've created
-	•	A function that, given the JS props, asks you to call make while passing in the correctly converted parameters (bs.deriving abstract above generates a field accessor for every record field you've declared).
+- The labeled reason component you've created
+- A function that, given the JS props, asks you to call make while passing in the correctly converted parameters (bs.deriving abstract above generates a field accessor for every record field you've declared).
 You'd assign the whole thing to the name jsComponent. The JS side can then import it:
 `var MyReasonComponent = require('./myReasonComponent.bs').jsComponent;`
 // make sure you're passing the correct data types!
