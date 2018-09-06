@@ -62,9 +62,13 @@ Reason comes with the JSX syntax! ReasonReact transforms it from an agnostic f
 <div foo={bar}> {child1} {child2} </div>
 ```
 Transforms into
+```javascript
 ReactDOMRe.createElement("div", ~props=ReactDOMRe.props(~foo=bar, ()), [|child1, child2|]);
+```
 which compiles to the JS code:
+```javascript
 React.createElement('div', {foo: bar}, child1, child2)
+```
 Note that ReactDOMRe.createElement is intended for internal use by the JSX transform. For escape-hatch scenarios, use ReasonReact.createDomElement instead, as outlined in the children section.
 
 10. 
