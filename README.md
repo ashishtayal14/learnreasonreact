@@ -104,10 +104,10 @@ ReasonReact.element(
 12. 
 In ReactJS, you can easily do: `<div> hello </div>, <div> {1} </div>, <div> {null} </div>`, etc. In Reason, the type system restricts you from passing arbitrary data like so; you can only return ReasonReact.reactElement from render.
 Fortunately, we special-case a few special elements of the type ReasonReact.reactElement:
-	•	ReasonReact.null: This is your null equivalent for render's return value. Akin to return null in ReactJS render.
-	•	ReasonReact.string: Takes a string and converts it to a reactElement. You'd use 
+- ReasonReact.null: This is your null equivalent for render's return value. Akin to return null in ReactJS render.
+- ReasonReact.string: Takes a string and converts it to a reactElement. You'd use 
   `<div> {ReasonReact.string(string_of_int(10))} </div>` to display an int.
-	•	ReasonReact.array: Takes an array and converts it to a reactElement.
+- ReasonReact.array: Takes an array and converts it to a reactElement.
 
 13. 
 If you're just forwarding a callback prop onto your child, you'd do exactly the same thing you'd have done in ReactJS:
@@ -149,9 +149,9 @@ let make = (~name, ~onClick, _children) => {
 };
 ```
 Note how your click callback now takes the extra argument self. Formally, self.handle expects a callback that
-	•	accepts the single payload you'd normally directly pass to e.g. handleClick,
-	•	plus the argument self,
-	•	returns "nothing" (aka, (), aka, unit).
+- accepts the single payload you'd normally directly pass to e.g. handleClick,
+- plus the argument self,
+- returns "nothing" (aka, (), aka, unit).
 Note 2: sometimes you might be forwarding handle to some helper functions. Pass the whole self instead and annotate it. This avoids a complex self record type behavior. See Record Field send/handle Not Found.
 In reality, self.handle is just a regular function accepting two arguments, the first being the callback in question, and the second one being the payload that's intended to be passed to the callback.
 Get it? Through Reason's natural language-level currying, we usually only ask you to pass the first argument. This returns a new function that takes in the second argument and executes the function body. The second argument being passed by the caller, aka the component you're rendering!
@@ -177,10 +177,10 @@ let handleSubmitEscapeHatch = (username, password, event) =>
 <MyForm onUserClickedSubmit=(handleSubmitEscapeHatch) />
 ```
 Basically, you write a normal callback that:
-	•	takes those many arguments from the JS component callback prop,
-	•	packs them into a tuple and call self.handle,
-	•	pass to handle the usual function that expects a single argument,
-	•	finish calling self.handle by passing the tuple directly yourself.
+- takes those many arguments from the JS component callback prop,
+- packs them into a tuple and call self.handle,
+- pass to handle the usual function that expects a single argument,
+- finish calling self.handle by passing the tuple directly yourself.
 
 16. 
 You can't update state in self.handle; you need to use self.send instead. See the next section.
