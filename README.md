@@ -2,9 +2,9 @@
 
 1. 
 The component template is created through ReasonReact.statelessComponent("TheComponentName"). The string being passed is for debugging purposes (the equivalent of ReactJS' displayName).
-	```javascript
-  let component = ReasonReact.statelessComponent("Greeting");
-  ```
+```javascript
+let component = ReasonReact.statelessComponent("Greeting");
+```
 
 2. 
 In reason react instead of creating a component class you create a component as below :
