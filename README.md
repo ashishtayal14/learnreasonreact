@@ -49,7 +49,9 @@ switch (ageFromProps) {
 | None => <Foo name="Reason" />
 | Some(nonNullableAge) => <Foo name="Reason" age=nonNullableAge />
 }
-Or
+```
+            OR
+```javascript
 <Foo name="Reason" age=?ageFromProps />
 ```
 
@@ -76,7 +78,9 @@ Note that ReactDOMRe.createElement is intended for internal use by the JSX tra
 10. 
 ```javascript
 <MyReasonComponent key={a} ref={b} foo={bar} baz={qux}> {child1} {child2} </MyReasonComponent>
+```
 transforms to
+```javascript
 ReasonReact.element(
   ~key=a,
   ~ref=b,
@@ -88,15 +92,20 @@ ReasonReact.element(
 ```javascript
 let theChildren = [| <div />, <div /> |];
 <MyReasonComponent> theChildren </MyReasonComponent>
+```
 Translates to:
+```javascript
 let theChildren = [| <div />, <div /> |];
 ReasonReact.element(
   MyReasonComponent.make([|theChildren|])
 );
-
+```
+```javascript
 let theChildren = [| <div />, <div /> |];
 <MyReasonComponent> ...theChildren </MyReasonComponent>
+```
 This simply passes theChildren without array wrapping. It becomes:
+```javascript
 let theChildren = [| <div />, <div /> |];
 ReasonReact.element(
   MyReasonComponent.make(theChildren)
